@@ -1,0 +1,43 @@
+services:
+  postgres:
+    image: postgres:13
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME}" ]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+
+  springboot:
+    image: vladstoian98/server-taco-bytes-web-app:latest
+    container_name: springboot_app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    environment:
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_URL: ${DB_URL}
+      JWT_SECRET: ${JWT_SECRET}
+      STRIPE_API_KEY: ${STRIPE_API_KEY}
+
+  angular-client:
+    image: vladstoian98/taco-angular-client:latest
+    container_name: angular_client
+    ports:
+      - "80:80"
+    depends_on:
+      - springboot
+
+
+volumes:
+  postgres_data:
